@@ -1,8 +1,39 @@
+use anyhow::Context;
+use bittorrent_starter_rust::cmd::{Args, Command};
+use bittorrent_starter_rust::hashes::Hashes;
+use bittorrent_starter_rust::torrent::{Keys, Torrent};
+use clap::{Parser, Subcommand};
+use serde_bencode;
 use serde_json;
-use std::env;
+use std::path::PathBuf;
 
 // Available if you need it!
 // use serde_bencode
+
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    match args.command {
+        Command::Decode { value } => {
+            let (decoded_value, _) = decode_bencoded_value(&value);
+            println!("{}", decoded_value.to_string());
+        }
+        Command::Info { torrent } => {
+            let dot_torrent = std::fs::read(torrent).context("failed to read torrent file")?;
+            let torrent: Torrent =
+                serde_bencode::from_bytes(&dot_torrent).context("failed to parse torrent file")?;
+            eprintln!("{torrent:?}");
+            println!("Tracker URL: {}", torrent.announce);
+            if let Keys::SingleFile { length } = torrent.info.keys {
+                println!("Length: {length}");
+            } else {
+                todo!();
+            }
+        }
+    }
+
+    Ok(())
+}
 
 #[allow(dead_code)]
 fn decode_bencoded_value(encoded_value: &str) -> (serde_json::Value, &str) {
@@ -64,18 +95,3 @@ fn decode_bencoded_value(encoded_value: &str) -> (serde_json::Value, &str) {
 }
 
 // Usage: your_bittorrent.sh decode "<encoded_value>"
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let command = &args[1];
-
-    if command == "decode" {
-        // You can use print statements as follows for debugging, they'll be visible when running tests.
-        eprintln!("Logs from your program will appear here!");
-
-        let encoded_value = &args[2];
-        let decoded_value = decode_bencoded_value(encoded_value);
-        println!("{}", decoded_value.0.to_string());
-    } else {
-        eprintln!("unknown command: {}", args[1])
-    }
-}
