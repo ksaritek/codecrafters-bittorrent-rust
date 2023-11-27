@@ -1,11 +1,9 @@
 use anyhow::Context;
 use bittorrent_starter_rust::cmd::{Args, Command};
-use bittorrent_starter_rust::hashes::Hashes;
 use bittorrent_starter_rust::torrent::{Keys, Torrent};
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use serde_bencode;
 use serde_json;
-use std::path::PathBuf;
 
 // Available if you need it!
 // use serde_bencode
